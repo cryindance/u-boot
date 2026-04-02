@@ -213,13 +213,13 @@ static const struct udevice_id nuclei_serial_ids[] = {
 };
 
 U_BOOT_DRIVER(serial_nuclei) = {
-	.name = "serial_nuclei",
-	.id = UCLASS_SERIAL,
+	.name	= "serial_nuclei",
+	.id	= UCLASS_SERIAL,
 	.of_match = nuclei_serial_ids,
 	.of_to_plat = nuclei_serial_of_to_plat,
 	.plat_auto = sizeof(struct nuclei_uart_plat),
 	.probe = nuclei_serial_probe,
-	.ops = &nuclei_serial_ops,
+	.ops	= &nuclei_serial_ops,
 };
 
 #ifdef CONFIG_DEBUG_UART_NUCLEI
