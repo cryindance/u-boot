@@ -15,10 +15,12 @@ int spl_soc_init(void)
 		debug("DRAM init failed: %d\n", ret);
 		return ret;
 	}
-
+    
+    //printf("spl_soc_init\n");
 	return 0;
 }
 
 void harts_early_init(void)
 {
+    //printf("harts_early_init\n");
 }

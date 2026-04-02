@@ -33,6 +33,21 @@
 #define SYM_SIZE		0x18
 #endif
 
+#define MHARTID_MASK 0x3
+
+/* define hartid mask bits */
+#ifndef MHARTID_MASK
+#error "MHARTID_MASK is not defined!"
+#else
+#define HARTID_MASK      MHARTID_MASK
+#endif
+
+.macro GET_MASKED_HARTID result_reg
+    # Read hartid into result register
+    csrr    \result_reg, mhartid
+    and     \result_reg, \result_reg, HARTID_MASK
+.endm
+
 .section .data
 secondary_harts_relocation_error:
 	.ascii "Relocation of secondary harts has failed, error %d\n"
@@ -41,7 +56,7 @@ secondary_harts_relocation_error:
 .globl _start
 _start:
 #if CONFIG_IS_ENABLED(RISCV_MMODE)
-	csrr	a0, CSR_MHARTID
+	GET_MASKED_HARTID       a0
 #endif
 
 	/*
