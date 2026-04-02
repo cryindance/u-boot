@@ -1,0 +1,121 @@
+digraph SPL_Boot_Flow {
+    // 图设置
+    rankdir=TB;
+    splines=ortho;
+    nodesep=0.5;
+    ranksep=0.8;
+    fontname="Arial";
+    fontsize=14;
+    bgcolor="white";
+    
+    // 节点样式
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11, margin="0.2,0.15"];
+    
+    // 边样式
+    edge [fontname="Arial", fontsize=9, color="#555555"];
+    
+    // 阶段1: 上电
+    subgraph cluster_poweron {
+        label="阶段1: Boot ROM / CPU 上电";
+        style=filled;
+        fillcolor="#fff3e0";
+        color="#ff9800";
+        fontcolor="#e65100";
+        
+        PowerOn [label="系统上电\n(Reset)", fillcolor="#ffccbc"];
+        LoadSPL [label="加载 u-boot-spl.bin\n从 SPI Flash", fillcolor="#ffe0b2"];
+        
+        PowerOn -> LoadSPL;
+    }
+    
+    // 阶段2: 汇编入口
+    subgraph cluster_start {
+        label="阶段2: _start (arch/riscv/cpu/start.S)";
+        style=filled;
+        fillcolor="#e3f2fd";
+        color="#2196f3";
+        fontcolor="#0d47a1";
+        
+        Start [label="_start 入口", fillcolor="#bbdefb"];
+        SaveReg [label="保存寄存器\nMHARTID→tp\nDTB→s1", fillcolor="#90caf9"];
+        SetupTrap [label="设置 trap_entry", fillcolor="#90caf9"];
+        DisableIRQ [label="屏蔽中断", fillcolor="#90caf9"];
+        SelectPrimary [label="SMP: 选举主核\n(lottery机制)", fillcolor="#64b5f6"];
+        EnableCache [label="启用缓存\nicache_enable\ndcache_enable", fillcolor="#42a5f5", fontcolor=white];
+        
+        Start -> SaveReg -> SetupTrap -> DisableIRQ -> SelectPrimary -> EnableCache;
+    }
+    
+    // 阶段3: C语言初始化
+    subgraph cluster_board_init {
+        label="阶段3: board_init_f (arch/riscv/lib/spl.c)";
+        style=filled;
+        fillcolor="#f3e5f5";
+        color="#9c27b0";
+        fontcolor="#4a148c";
+        
+        SplEarly [label="spl_early_init()\nSPL框架初始化", fillcolor="#e1bee7"];
+        CpuSetup [label="riscv_cpu_setup()\nCPU基础设置", fillcolor="#ce93d8"];
+        ConsoleInit [label="preloader_console_init()\n串口初始化", fillcolor="#ba68c8", fontcolor=white];
+        BoardInitF [label="spl_board_init_f()\n板级初始化", fillcolor="#ab47bc", fontcolor=white];
+        
+        SplEarly -> CpuSetup -> ConsoleInit -> BoardInitF;
+    }
+    
+    // 阶段4-5: SoC和板级初始化
+    subgraph cluster_soc {
+        label="阶段4-5: DDR & CCM 初始化";
+        style=filled;
+        fillcolor="#e8f5e9";
+        color="#4caf50";
+        fontcolor="#1b5e20";
+        
+        DDRInit [label="spl_soc_init()\nDDR 初始化\n(UCLASS_RAM)", fillcolor="#c8e6c9"];
+        CCMEnable [label="spl_board_init_f()\n启用 CCM\ncsr_write(CCM_SUEN)", fillcolor="#a5d6a7"];
+        
+        DDRInit -> CCMEnable;
+    }
+    
+    // 阶段6: 镜像加载
+    subgraph cluster_load {
+        label="阶段6: 镜像加载";
+        style=filled;
+        fillcolor="#fff8e1";
+        color="#ffc107";
+        fontcolor="#ff6f00";
+        
+        LoadImage [label="spl_load_image()\n从 BOOT_DEVICE_RAM", fillcolor="#ffecb3"];
+        PostProcess [label="board_fit_image_post_process()\nFIT镜像后处理", fillcolor="#ffe082"];
+        Decrypt [label="image_uncipher()\n解密(如需要)", fillcolor="#ffd54f"];
+        
+        LoadImage -> PostProcess -> Decrypt;
+    }
+    
+    // 阶段7: 跳转
+    subgraph cluster_jump {
+        label="阶段7: 跳转执行";
+        style=filled;
+        fillcolor="#fce4ec";
+        color="#e91e63";
+        fontcolor="#880e4f";
+        
+        Invalidate [label="invalidate_icache_all()\n刷新指令缓存", fillcolor="#f8bbd9"];
+        Jump [label="jump_to_image_no_args()\n跳转到下一阶段", fillcolor="#f48fb1", shape=doublecircle, peripheries=2];
+        Target [label="OpenSBI / U-Boot Proper\n(hart, dtb)", fillcolor="#f06292", fontcolor=white];
+        
+        Invalidate -> Jump -> Target;
+    }
+    
+    // 连接各阶段
+    LoadSPL -> Start [ltail=cluster_poweron, lhead=cluster_start];
+    EnableCache -> SplEarly [ltail=cluster_start, lhead=cluster_board_init];
+    BoardInitF -> DDRInit [ltail=cluster_board_init, lhead=cluster_soc];
+    CCMEnable -> LoadImage [ltail=cluster_soc, lhead=cluster_load];
+    Decrypt -> Invalidate [ltail=cluster_load, lhead=cluster_jump];
+    
+    // 标题
+    labelloc="t";
+    label="Nuclei RISC-V SPL 启动流程图";
+    fontsize=16;
+    fontname="Arial Bold";
+}

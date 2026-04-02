@@ -1,0 +1,61 @@
+digraph CCM_Control {
+    // 图设置
+    rankdir=TB;
+    nodesep=0.6;
+    ranksep=0.8;
+    fontname="Arial";
+    
+    // 节点样式
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11];
+    
+    // 初始化节点
+    Start [label="CCM 操作开始", fillcolor="#e3f2fd", shape=ellipse];
+    
+    // 判断节点
+    CheckMode [label="当前特权模式?", fillcolor="#fff3e0", shape=diamond];
+    
+    // M-mode 路径
+    MMode [label="M-mode\n(Machine)", fillcolor="#ffcdd2"];
+    MSetAddr [label="csr_write\n(CCM_MBEGINADDR, addr)", fillcolor="#ef9a9a"];
+    MExecCmd [label="csr_write\n(CCM_MCOMMAND, cmd)", fillcolor="#ef5350", fontcolor=white];
+    
+    // S-mode 路径
+    SMode [label="S-mode\n(Supervisor)", fillcolor="#c8e6c9"];
+    CheckCCM [label="CCM 已启用?", fillcolor="#fff3e0", shape=diamond];
+    SSetAddr [label="csr_write\n(CCM_SBEGINADDR, addr)", fillcolor="#a5d6a7"];
+    SExecCmd [label="csr_write\n(CCM_SCOMMAND, cmd)", fillcolor="#66bb6a", fontcolor=white];
+    Error [label="异常!\n需要先启用CCM", fillcolor="#ffebee", color="#c62828"];
+    
+    // 命令
+    Commands [label="CCM 命令:\n• CCM_DC_INVAL (0x0) - D-Cache行失效\n• CCM_DC_WB (0x1) - D-Cache行写回\n• CCM_DC_WBINVAL (0x2) - 写回+失效\n• CCM_DC_WBINVAL_ALL (0x6) - 全部D-Cache\n• CCM_IC_INVAL_ALL (0xd) - 全部I-Cache", 
+             fillcolor="#f3e5f5", shape=note, margin="0.3,0.2"];
+    
+    // 完成
+    Done [label="操作完成", fillcolor="#e8f5e9", shape=ellipse];
+    
+    // 边
+    Start -> CheckMode;
+    CheckMode -> MMode [label="M-mode"];
+    CheckMode -> SMode [label="S-mode"];
+    
+    MMode -> MSetAddr -> MExecCmd -> Done;
+    
+    SMode -> CheckCCM;
+    CheckCCM -> SSetAddr [label="是"];
+    CheckCCM -> Error [label="否", color="#c62828", fontcolor="#c62828"];
+    SSetAddr -> SExecCmd -> Done;
+    Error -> SMode [label="启用 CCM_SUEN", style=dashed, color="#666"];
+    
+    // CSR地址标注
+    CSR [label="CSR 地址:\n• MCACHE_CTL: 0x7ca\n• CCM_MBEGINADDR: 0x7cb\n• CCM_MCOMMAND: 0x7cc\n• CCM_SBEGINADDR: 0x5cb\n• CCM_SCOMMAND: 0x5cc\n• CCM_SUEN: 0x7ce", 
+         shape=box, fillcolor="#fff8e1", style=filled, fontsize=9];
+    
+    // 布局
+    {rank=same; Commands; CSR}
+    
+    // 标题
+    labelloc="t";
+    label="Nuclei CCM 缓存控制流程";
+    fontsize=14;
+    fontname="Arial Bold";
+}

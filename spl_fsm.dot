@@ -1,0 +1,72 @@
+digraph SPL_Boot_StateMachine {
+    // 图设置
+    rankdir=TB;
+    splines=true;
+    overlap=false;
+    nodesep=0.6;
+    ranksep=1.0;
+    fontname="Arial";
+    fontsize=14;
+    
+    // 节点默认样式
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=12, margin="0.2,0.15"];
+    
+    // 边默认样式
+    edge [fontname="Arial", fontsize=10, color="#555555"];
+    
+    // 初始状态
+    Reset [label="RESET\n(系统复位)", fillcolor="#e74c3c", fontcolor=white, shape=circle, width=0.8, height=0.8];
+    
+    // 主状态
+    Init [label="INIT\n(寄存器/栈)", fillcolor="#3498db", fontcolor=white];
+    Cache [label="CACHE_ON\n(启用缓存)", fillcolor="#9b59b6", fontcolor=white];
+    DDR [label="DDR_INIT\n(内存初始化)", fillcolor="#f39c12", fontcolor=white];
+    CCM [label="CCM_ENABLE\n(S-mode缓存)", fillcolor="#1abc9c", fontcolor=white];
+    Load [label="LOAD_IMAGE\n(加载FIT)", fillcolor="#34495e", fontcolor=white];
+    Decrypt [label="DECRYPT\n(安全解密)", fillcolor="#e67e22", fontcolor=white];
+    Jump [label="JUMP\n(跳转执行)", fillcolor="#27ae60", fontcolor=white, shape=doublecircle];
+    
+    // 错误状态
+    Error [label="ERROR\n(启动失败)", fillcolor="#c0392b", fontcolor=white, shape=ellipse, peripheries=2];
+    
+    // 状态转换
+    Reset -> Init [label="_start", penwidth=2, color="#e74c3c"];
+    Init -> Cache [label="hart_init", color="#3498db"];
+    Cache -> DDR [label="cache_ready", color="#9b59b6"];
+    DDR -> CCM [label="ddr_ok", color="#f39c12"];
+    DDR -> Error [label="ddr_fail", style=dashed, color="#e74c3c", fontcolor="#e74c3c"];
+    CCM -> Load [label="ccm_en", color="#1abc9c"];
+    Load -> Decrypt [label="encrypted", color="#e67e22"];
+    Load -> Jump [label="plain", color="#34495e"];
+    Decrypt -> Jump [label="decrypt_ok", color="#27ae60"];
+    Decrypt -> Error [label="auth_fail", style=dashed, color="#c0392b", fontcolor="#c0392b"];
+    
+    // 错误恢复
+    Error -> Reset [label="watchdog", style="dashed,bold", color="#c0392b", constraint=false];
+    
+    // 聚类分组
+    subgraph cluster_early {
+        label="早期初始化 (M-mode)";
+        style=filled;
+        fillcolor="#ecf0f1";
+        color="#bdc3c7";
+        fontcolor="#7f8c8d";
+        
+        Init -> Cache -> DDR;
+    }
+    
+    subgraph cluster_main {
+        label="主流程";
+        style=filled;
+        fillcolor="#ecf0f1";
+        color="#bdc3c7";
+        fontcolor="#7f8c8d";
+        
+        CCM -> Load;
+    }
+    
+    // 注释
+    label="U-Boot SPL 启动状态机 (Nuclei RISC-V)";
+    labelloc=t;
+    labeljust=center;
+}

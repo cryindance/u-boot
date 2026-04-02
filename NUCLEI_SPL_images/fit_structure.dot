@@ -1,0 +1,92 @@
+digraph FIT_Image {
+    // 图设置
+    compound=true;
+    rankdir=TB;
+    nodesep=0.4;
+    ranksep=0.6;
+    fontname="Arial";
+    
+    // 节点样式
+    node [shape=box, style="rounded,filled", fontname="Arial", fontsize=10];
+    
+    // FIT 镜像顶层
+    FIT [label="FIT Image (kernel.itb)", fillcolor="#37474f", fontcolor=white, 
+         shape=folder, width=3, height=0.6, fontsize=12, penwidth=2];
+    
+    // 配置节点
+    subgraph cluster_config {
+        label="配置 (configurations)";
+        style=filled;
+        fillcolor="#e3f2fd";
+        color="#1976d2";
+        
+        Config1 [label="conf@1\n默认配置", fillcolor="#bbdefb"];
+        Config2 [label="conf@2\n调试配置", fillcolor="#90caf9"];
+    }
+    
+    // 镜像节点
+    subgraph cluster_images {
+        label="镜像 (images)";
+        style=filled;
+        fillcolor="#f3e5f5";
+        color="#7b1fa2";
+        
+        Kernel [label="kernel@1\n内核镜像\n[压缩/未压缩]", fillcolor="#e1bee7"];
+        Ramdisk [label="ramdisk@1\n根文件系统", fillcolor="#ce93d8"];
+        FDT [label="fdt@1\n设备树", fillcolor="#ba68c8", fontcolor=white];
+    }
+    
+    // 加密节点（可选）
+    subgraph cluster_cipher {
+        label="加密 (cipher) - 可选";
+        style=filled;
+        fillcolor="#fff3e0";
+        color="#ef6c00";
+        
+        Cipher [label="cipher@1\n加密信息\n• algo: aes-256-cbc\n• key-name-hint", fillcolor="#ffe0b2"];
+    }
+    
+    // 签名节点（可选）
+    subgraph cluster_sig {
+        label="签名 (signature) - 可选";
+        style=filled;
+        fillcolor="#e8f5e9";
+        color="#388e3c";
+        
+        Signature [label="signature@1\n签名块\n• algo: sha256,rsa2048\n• key-name-hint", fillcolor="#c8e6c9"];
+    }
+    
+    // 连接关系
+    FIT -> Config1 [ltail=cluster_fit];
+    FIT -> Config2 [ltail=cluster_fit];
+    
+    Config1 -> Kernel [color="#1976d2", style=dashed, label="load"];
+    Config1 -> Ramdisk [color="#1976d2", style=dashed, label="load"];
+    Config1 -> FDT [color="#1976d2", style=dashed, label="load"];
+    
+    Kernel -> Cipher [color="#ef6c00", style=dotted, label="加密"];
+    Kernel -> Signature [color="#388e3c", style=dotted, label="签名"];
+    
+    // 加载流程
+    subgraph cluster_flow {
+        label="SPL 加载流程";
+        style=filled;
+        fillcolor="#fff8e1";
+        color="#fbc02d";
+        
+        Step1 [label="1. 解析 FIT header", fillcolor="#ffecb3"];
+        Step2 [label="2. 查找配置", fillcolor="#ffe082"];
+        Step3 [label="3. 验证签名 (可选)", fillcolor="#ffd54f"];
+        Step4 [label="4. 解密镜像 (可选)", fillcolor="#ffca28"];
+        Step5 [label="5. 加载到内存", fillcolor="#ffc107"];
+        Step6 [label="6. 跳转执行", fillcolor="#ffb300"];
+        
+        Step1 -> Step2 -> Step3 -> Step4 -> Step5 -> Step6;
+    }
+    
+    // 标题
+    labelloc="t";
+    label="FIT 镜像结构与加载流程";
+    fontsize=14;
+    fontname="Arial Bold";
+}
