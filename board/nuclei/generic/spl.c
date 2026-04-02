@@ -21,6 +21,20 @@ int spl_board_init_f(void)
 	/* enable ccm ops for smode */
 	csr_write(CCM_SUEN, CCM_SEN);
 
+    #define MATTRI0_MASK    0x7F4
+    #define MATTRI0_BASE    0x7F3
+    #define HOST_MAILBOX_BASE_ADDR  (0x8800000UL)
+    #define HOST_MAILBOX_SIZE       (0x4000ULL)
+
+    uint64_t base_val;
+
+    base_val = (HOST_MAILBOX_BASE_ADDR & (~(HOST_MAILBOX_SIZE-1))) | BIT(2) | BIT(0);
+
+    
+    csr_write(MATTRI0_MASK, ~(HOST_MAILBOX_SIZE-1));
+    csr_write(MATTRI0_BASE, base_val);
+    
+
 	return 0;
 }
 
@@ -30,6 +44,8 @@ void spl_board_init(void)
 
 // TODO do your basic board initialization for uboot spl
     log_info("Do initialization for spl board, sizeof(struct global_data)=%lu!\n", sizeof(struct global_data));
+    
+
 }
 
 
