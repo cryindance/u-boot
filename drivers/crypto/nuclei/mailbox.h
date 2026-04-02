@@ -3,7 +3,7 @@
 
 #include "mailbox_lowlevel.h"
 
-#define CORE0_PPI_RAM_BASE                        (0x97000000UL)
+#define CORE0_PPI_RAM_BASE                        (0x8800000UL)
 
 #define CORE0_PPI_RAM                             ((MAILBOX_TypeDef *) CORE0_PPI_RAM_BASE)		
 

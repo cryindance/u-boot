@@ -1,5 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "mailbox_lowlevel.h"
+#include <string.h>
+#include <linux/delay.h>
 
 /**
   * \brief  Host link to specified mailbox.
@@ -56,15 +58,25 @@ ErrStatus MAILBOX_HostLinkToMbx(MAILBOX_TypeDef* mailbox, uint8_t mbx_num)
 void MAILBOX_HostWriteDataToMailboxIn(MAILBOX_TypeDef* mailbox, uint8_t mbx_num, uint32_t *addr, uint32_t *buf, uint8_t len)
 {
     uint8_t i = 0;
-
+    //printf("addr:%p,buf:%p\n",addr,buf);
+    //delay_u(200);
+    //memcpy( addr, buf, len);
+    
+#if 1
     /* Write data to input mailbox*/
     for (i = 0; i < len; i++) {
-        addr[i] = buf[i];    
+        addr[i] = buf[i];  
+        //mdelay(1);
+         //printf("i=%d\n",i);
     }
+#endif
 	asm volatile ("fence");
+    //printf("buf to addr finish.\n");
     /* Write 1 to set status */
     MAILBOX_SetMbxInFull(mailbox, mbx_num);
+    //printf("MAILBOX_SetMbxInFull finish.\n");
 	asm volatile ("fence");
+    //printf("fence finish.\n");
 }
 
 /**

@@ -224,6 +224,8 @@ void mailbox_secure_service_host_send(uint32_t *data, uint8_t opcode, uint8_t ma
         return;
     }
 
+    //printf("mailbox_num:%d,mailbox_addr:0x%x,wBuf:0x%lx\n",mailbox_num,mailbox_addr,&wBuf);
+
     switch (opcode) {
         case SECURE_SERVICE_OPCODE_HASH:
             memcpy( ADDR8P(wBuf), ADDR8P(data), sizeof(mailbox_hash_cmd_in_token));
