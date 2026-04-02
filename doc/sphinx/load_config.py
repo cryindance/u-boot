@@ -3,7 +3,12 @@
 
 import os
 import sys
-from sphinx.util.pycompat import execfile_
+
+# execfile_ 兼容实现（Sphinx 7.x 已移除该模块）
+def execfile_(filepath, namespace):
+    with open(filepath, 'rb') as f:
+        code = compile(f.read(), filepath, 'exec')
+    exec(code, namespace)
 
 # ------------------------------------------------------------------------------
 def loadConfig(namespace):
